@@ -1,0 +1,541 @@
+{
+  "name": "YoutubePipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "12bES542itCTPTs32jopyiYc1UUjm3jmfK70f3VIqGxQ",
+          "mode": "list",
+          "cachedResultName": "YT Summary",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12bES542itCTPTs32jopyiYc1UUjm3jmfK70f3VIqGxQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12bES542itCTPTs32jopyiYc1UUjm3jmfK70f3VIqGxQ/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        660,
+        -420
+      ],
+      "id": "1985c38a-716c-4b80-bd8a-c7160aa9192e",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "CKNLytLiFFRdejDE",
+          "name": "Google Sheets Trigger account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "ApifyYoutubeTranscripterKey",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"videoUrl\":\"{{ $('Google Sheets Trigger').item.json.URL }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        -420
+      ],
+      "id": "fa1c5627-21d2-43c8-bded-f0f1d66f984b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "12bES542itCTPTs32jopyiYc1UUjm3jmfK70f3VIqGxQ",
+          "mode": "list",
+          "cachedResultName": "YT Summary",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12bES542itCTPTs32jopyiYc1UUjm3jmfK70f3VIqGxQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12bES542itCTPTs32jopyiYc1UUjm3jmfK70f3VIqGxQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "URL": "={{ $('Google Sheets Trigger').item.json.URL }}",
+            "Transcript": "={{ $json.transcript }}"
+          },
+          "matchingColumns": [
+            "URL"
+          ],
+          "schema": [
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Transcript",
+              "displayName": "Transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2160,
+        -200
+      ],
+      "id": "ac14a68a-f261-478d-b498-69e8d0bd2f12",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1XWe33iFPAPKZ1Vx",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=yt-dlp -o \"C:\\Users\\chall\\Downloads\\videos/%(title).20s.%(id)s.%(ext)s\" --restrict-filenames \"{{$json.URL}}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -420
+      ],
+      "id": "b802f33b-4b98-4e0c-bed6-8738e76dd542",
+      "name": "Download Video"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prompt = `\nGiven the following transcript with timestamps, identify the top 5 highlights.\nFor each highlight, include a short title, start time in seconds, and end time in seconds.\nReturn as a JSON array.\n\nTranscript:\n${JSON.stringify($input.first().json.data)}\n`;\n\nreturn [\n  {\n    json: {\n      contents: [\n        {\n          parts: [\n            { text: prompt }\n          ]\n        }\n      ]\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        -420
+      ],
+      "id": "a667685f-73a5-45f2-bb84-609634f4602a",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "promptType": "=define",
+        "text": "=You are a video summarizer.\n\nGiven a video transcript with timestamps, extract the top 5 content highlights.\n\nYour response must be a valid JSON object (not a string) with the key \"output\", whose value is an array of highlight objects.\n\nEach highlight must follow this structure:\n{\n  \"title\": \"Short title (max 8 words)\",\n  \"start\": <startTimeInSeconds>,\n  \"end\": <endTimeInSeconds>,\n  \"summary\": \"Concise summary (max 30 words)\"\n}\n\n⚠️ Important Output Rules:\n- DO NOT include markdown backticks (```), code blocks, or explanations\n- DO NOT stringify the array\n- DO NOT add any \\n or newline characters\n- DO escape all inner quotes inside strings (e.g. summary: \"Use \\\"Service Account\\\" not OAuth2\")\n- Your final output must be a clean, valid JSON object — no formatting wrappers\n\nTranscript to summarize:\n{{ $json[\"contents\"][0][\"parts\"][0][\"text\"] }}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        -680
+      ],
+      "id": "3b120819-f522-4419-a96b-eec93fab6180",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-preview-05-20",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1848,
+        -460
+      ],
+      "id": "3e79d974-2b2a-4813-8335-b31496a8b51a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "bi69rHz7Eedp8vdS",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = $json.output;\nconst parsed = JSON.parse(raw); // parse the string into real object\nreturn parsed;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2140,
+        -580
+      ],
+      "id": "087fd6c4-0adb-446d-a7dd-d20eca1a956e",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2500,
+        -580
+      ],
+      "id": "5bb56c2c-933f-440e-a50e-330d89001eb3",
+      "name": "Split Out4"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const match = $json.stdout.match(/Merging formats into\\s+\"(C:\\\\Users\\\\chall\\\\Downloads\\\\videos\\\\[^\"']+\\.(mp4|mkv|webm))\"/i);\n\nif (!match) {\n  throw new Error(\"Final merged video path not found.\");\n}\n\nconst rawPath = match[1]; // First capturing group\nconst normalizedPath = rawPath.replace(/\\\\/g, \"/\").trim();\n\nreturn {\n  videoPath: normalizedPath\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        -420
+      ],
+      "id": "0fb9cd2f-260e-42e1-9f7d-f402edf8ad8f",
+      "name": "Extract"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.contents[0].parts[0].text;\n\n// Extract the JSON string from the text (after the word \"Transcript:\")\nconst jsonMatch = raw.match(/Transcript:\\s*\\n([\\s\\S]*)/);\nif (!jsonMatch || jsonMatch.length < 2) {\n  throw new Error(\"Transcript JSON not found.\");\n}\n\nconst jsonStr = jsonMatch[1].trim();\nconst transcriptArray = JSON.parse(jsonStr); // Convert string to JSON array\n\n// Clean and join the transcript text\nconst cleanText = transcriptArray\n  .map(obj => obj.text || \"\")\n  .join(\" \")\n  .replace(/\\n/g, \" \")\n  .replace(/\\s+/g, \" \")\n  .replace(/[^\\w\\s.,'-]/g, \"\") // Keep basic punctuation\n  .trim();\n\nreturn [\n  {\n    json: {\n      transcript: cleanText\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        -260
+      ],
+      "id": "03a64786-5ff3-4c8a-9f47-3bedeb950ebb",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "12bES542itCTPTs32jopyiYc1UUjm3jmfK70f3VIqGxQ",
+          "mode": "list",
+          "cachedResultName": "YT Summary",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12bES542itCTPTs32jopyiYc1UUjm3jmfK70f3VIqGxQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12bES542itCTPTs32jopyiYc1UUjm3jmfK70f3VIqGxQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "URL": "={{ $('Google Sheets Trigger').item.json.URL }}",
+            "summary": "={{ $json.concatenated_summary }}"
+          },
+          "matchingColumns": [
+            "URL"
+          ],
+          "schema": [
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Transcript",
+              "displayName": "Transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2960,
+        -900
+      ],
+      "id": "80a0b9e7-c8c7-4d04-bf82-718213670224",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1XWe33iFPAPKZ1Vx",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2360,
+        -580
+      ],
+      "id": "4fccb9d6-aee0-4268-a4a5-9000351996df",
+      "name": "Split Out3"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "summary"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        2680,
+        -580
+      ],
+      "id": "45396b5b-9f6e-4857-b012-f10a62c4fc82",
+      "name": "Summarize1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video": {
+      "main": [
+        [
+          {
+            "node": "Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Split Out4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out4": {
+      "main": [
+        []
+      ]
+    },
+    "Extract": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out3": {
+      "main": [
+        [
+          {
+            "node": "Summarize1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "612e199a-a08a-4246-9a44-63edc45652e0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "425764543fbcd9a899ba6e754a22c8a49d27686749248ea4c171670905c58548"
+  },
+  "id": "UJbZIykgRZBvDsJf",
+  "tags": []
+}
